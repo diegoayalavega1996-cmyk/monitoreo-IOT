@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monitoreo Vibracional FCC</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+<body style="font-family:Arial; text-align:center; background:#0f172a; color:white;">
+
+<h1>Monitoreo Vibracional</h1>
+<h2>Unidad FCC-RG1</h2>
+<h3 id="equipo">RG1-P101B</h3>
+
+<h1 id="valor" style="font-size:60px; color:yellow;">-- mm/s</h1>
+<p id="estado">Esperando datos...</p>
+
+<script>
+
+// 🔥 DATOS DE TU BROKER
+const options = {
+  username: 'diego',
+  password: 'Tecsup2412'
+};
+
+// 🔗 CONEXION MQTT
+const client = mqtt.connect('wss://ad668db780cc40d0b2964d742cf80395.s1.eu.hivemq.cloud:8884/mqtt', options);
+
+// 📡 CUANDO CONECTA
+client.on('connect', function () {
+  console.log('Conectado a HiveMQ');
+  client.subscribe('fcc/rg1/rg1-p101b/datos');
+});
+
+// 📥 CUANDO LLEGA DATO
+client.on('message', function (topic, message) {
+
+  let data = JSON.parse(message.toString());
+
+  document.getElementById("valor").innerHTML = data.vibracion + " mm/s";
+
+  // Estado
+  if (data.vibracion < 4) {
+    document.getElementById("valor").style.color = "green";
+    document.getElementById("estado").innerHTML = "NORMAL";
+  } 
+  else if (data.vibracion < 7) {
+    document.getElementById("valor").style.color = "orange";
+    document.getElementById("estado").innerHTML = "ALERTA";
+  } 
+  else {
+    document.getElementById("valor").style.color = "red";
+    document.getElementById("estado").innerHTML = "CRITICO";
+  }
+
+});
+
+</script>
+
+</body>
+</html>
