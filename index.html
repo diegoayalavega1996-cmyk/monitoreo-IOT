@@ -6,11 +6,7 @@
   <title>Monitoreo Vibracional FCC-RG1</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -21,7 +17,6 @@
       color: white;
       padding: 20px;
     }
-
     .card {
       width: 100%;
       max-width: 700px;
@@ -31,131 +26,33 @@
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
       text-align: center;
     }
-
-    h1 {
-      margin: 0 0 8px 0;
-      color: #2fb3ff;
-      font-size: 34px;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      margin: 0 0 28px 0;
-      font-size: 18px;
-      color: #e8edf7;
-    }
-
-    .menu-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-top: 10px;
-    }
-
-    .pump-btn,
-    .back-btn {
-      border: none;
-      border-radius: 20px;
-      padding: 20px;
-      font-size: 18px;
-      cursor: pointer;
+    h1 { margin: 0 0 8px 0; color: #2fb3ff; font-size: 34px; font-weight: 700; }
+    .subtitle { margin: 0 0 28px 0; font-size: 18px; color: #e8edf7; }
+    .menu-buttons { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+    .pump-btn, .back-btn {
+      border: none; border-radius: 20px; padding: 20px; font-size: 18px; cursor: pointer;
       transition: transform 0.15s ease, opacity 0.15s ease;
     }
-
-    .pump-btn {
-      background: #2f66e2;
-      color: white;
-    }
-
-    .pump-btn:hover,
-    .back-btn:hover {
-      transform: scale(1.01);
-      opacity: 0.95;
-    }
-
-    .back-btn {
-      background: #4b5d80;
-      color: white;
-      margin-top: 28px;
-      width: 220px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .pump-title {
-      color: #2fb3ff;
-      font-size: 30px;
-      margin-bottom: 10px;
-    }
-
+    .pump-btn { background: #2f66e2; color: white; }
+    .pump-btn:hover, .back-btn:hover { transform: scale(1.01); opacity: 0.95; }
+    .back-btn { background: #4b5d80; color: white; margin-top: 28px; width: 220px; }
+    .hidden { display: none; }
+    .pump-title { color: #2fb3ff; font-size: 30px; margin-bottom: 10px; }
     .status-box {
-      margin-top: 22px;
-      background: #122038;
-      border-radius: 20px;
-      padding: 28px 20px;
+      margin-top: 22px; background: #122038; border-radius: 20px; padding: 28px 20px;
     }
-
-    .value {
-      font-size: 54px;
-      font-weight: 700;
-      margin: 10px 0;
-      color: #33d17a;
-    }
-
-    .status {
-      font-size: 24px;
-      font-weight: 700;
-      margin-top: 12px;
-    }
-
-    .status.normal {
-      color: #33d17a;
-    }
-
-    .status.alerta {
-      color: #ffb020;
-    }
-
-    .status.critico {
-      color: #ff5c5c;
-    }
-
-    .status.sin-datos,
-    .status.sin-conexion {
-      color: #c9d1e4;
-    }
-
-    .small-text {
-      margin-top: 10px;
-      font-size: 16px;
-      color: #d9e2f2;
-    }
-
-    @media (max-width: 600px) {
-      .card {
-        padding: 28px 20px;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-
-      .pump-title {
-        font-size: 26px;
-      }
-
-      .value {
-        font-size: 42px;
-      }
-    }
+    .value { font-size: 54px; font-weight: 700; margin: 10px 0; color: #33d17a; }
+    .status { font-size: 24px; font-weight: 700; margin-top: 12px; }
+    .status.normal { color: #33d17a; }
+    .status.alerta { color: #ffb020; }
+    .status.critico { color: #ff5c5c; }
+    .status.sin-datos, .status.sin-conexion { color: #c9d1e4; }
+    .small-text { margin-top: 10px; font-size: 16px; color: #d9e2f2; }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <!-- PANTALLA PRINCIPAL -->
     <div id="homeScreen">
       <h1>Monitoreo Vibracional Unidad FCC-RG1</h1>
       <p class="subtitle">Seleccione una bomba</p>
@@ -167,7 +64,6 @@
       </div>
     </div>
 
-    <!-- PANTALLA DE BOMBA -->
     <div id="pumpScreen" class="hidden">
       <h1 class="pump-title" id="pumpTitle">Bomba</h1>
 
@@ -182,10 +78,15 @@
   </div>
 
   <script>
-    const topicDatos = 'fcc/rg1/rg1-p101b/datos';
+    const topicP101A = 'fcc/rg1/rg1-p101a/datos';
+    const topicP101B = 'fcc/rg1/rg1-p101b/datos';
 
     let currentPump = null;
-    let ultimoMensajeMs = 0;
+    let ultimoMsgA = 0;
+    let ultimoMsgB = 0;
+
+    let ultimoDatoA = null;
+    let ultimoDatoB = null;
 
     const client = mqtt.connect(
       'wss://ad668db780cc40d0b2964d742cf80395.s1.eu.hivemq.cloud:8884/mqtt',
@@ -196,26 +97,29 @@
     );
 
     client.on('connect', function () {
-      console.log('Conectado a HiveMQ');
-      client.subscribe(topicDatos);
+      client.subscribe(topicP101A);
+      client.subscribe(topicP101B);
     });
 
     client.on('message', function (topic, message) {
-      if (topic !== topicDatos) return;
-
-      ultimoMensajeMs = Date.now();
-
       let data;
       try {
         data = JSON.parse(message.toString());
       } catch (e) {
-        console.log('Error leyendo JSON');
         return;
       }
 
-      if (currentPump !== 'RG1-P101B') return;
+      if (topic === topicP101A) {
+        ultimoMsgA = Date.now();
+        ultimoDatoA = data;
+        if (currentPump === 'RG1-P101A') actualizarPantalla(data);
+      }
 
-      actualizarPantallaBombaActiva(data);
+      if (topic === topicP101B) {
+        ultimoMsgB = Date.now();
+        ultimoDatoB = data;
+        if (currentPump === 'RG1-P101B') actualizarPantalla(data);
+      }
     });
 
     function showPump(pumpName) {
@@ -232,18 +136,30 @@
       valueEl.className = 'value';
       statusEl.className = 'status';
 
-      if (pumpName === 'RG1-P101A' || pumpName === 'RG1-P009A') {
+      if (pumpName === 'RG1-P009A') {
         valueEl.textContent = '--';
+        valueEl.style.color = '#c9d1e4';
         statusEl.textContent = 'SIN CONEXIÓN';
         statusEl.classList.add('sin-conexion');
         extraEl.textContent = 'Esta bomba no cuenta con sensor instalado.';
         return;
       }
 
+      if (pumpName === 'RG1-P101A' && ultimoDatoA) {
+        actualizarPantalla(ultimoDatoA);
+        return;
+      }
+
+      if (pumpName === 'RG1-P101B' && ultimoDatoB) {
+        actualizarPantalla(ultimoDatoB);
+        return;
+      }
+
       valueEl.textContent = '--';
+      valueEl.style.color = '#c9d1e4';
       statusEl.textContent = 'Esperando datos';
       statusEl.classList.add('sin-datos');
-      extraEl.textContent = 'Conectado al broker MQTT, esperando lectura.';
+      extraEl.textContent = 'Esperando información desde HiveMQ.';
     }
 
     function goHome() {
@@ -252,17 +168,17 @@
       document.getElementById('homeScreen').classList.remove('hidden');
     }
 
-    function actualizarPantallaBombaActiva(data) {
+    function actualizarPantalla(data) {
       const valueEl = document.getElementById('pumpValue');
       const statusEl = document.getElementById('pumpStatus');
       const extraEl = document.getElementById('pumpExtra');
 
       if (data.estado === 'SIN_DATOS') {
         valueEl.textContent = '--';
-        valueEl.className = 'value';
+        valueEl.style.color = '#c9d1e4';
         statusEl.textContent = 'SIN DATOS';
         statusEl.className = 'status sin-datos';
-        extraEl.textContent = 'No se están recibiendo datos del ESP32 sensor.';
+        extraEl.textContent = 'No se están recibiendo datos del sensor.';
         return;
       }
 
@@ -289,22 +205,17 @@
       extraEl.textContent = 'Último paquete recibido: ' + contador;
     }
 
-    // Si pasan varios segundos sin mensajes nuevos, marcar SIN DATOS en la bomba activa
     setInterval(() => {
-      if (currentPump !== 'RG1-P101B') return;
+      if (currentPump === 'RG1-P101A') {
+        if (ultimoMsgA !== 0 && Date.now() - ultimoMsgA > 8000) {
+          actualizarPantalla({ estado: 'SIN_DATOS' });
+        }
+      }
 
-      const ahora = Date.now();
-
-      if (ultimoMensajeMs !== 0 && (ahora - ultimoMensajeMs > 8000)) {
-        const valueEl = document.getElementById('pumpValue');
-        const statusEl = document.getElementById('pumpStatus');
-        const extraEl = document.getElementById('pumpExtra');
-
-        valueEl.textContent = '--';
-        valueEl.style.color = '#c9d1e4';
-        statusEl.textContent = 'SIN DATOS';
-        statusEl.className = 'status sin-datos';
-        extraEl.textContent = 'Se perdió la comunicación con el sensor.';
+      if (currentPump === 'RG1-P101B') {
+        if (ultimoMsgB !== 0 && Date.now() - ultimoMsgB > 8000) {
+          actualizarPantalla({ estado: 'SIN_DATOS' });
+        }
       }
     }, 1000);
   </script>
